@@ -1,0 +1,327 @@
+.contextual-links-wrapper a,.contextual-links-wrapper{
+  font-size: 12px;
+  font-weight: normal;
+}
+ul.contextual-links{
+  min-width: 140px;
+}
+#main-content{
+  margin-top: 80px;
+}
+#content{
+  margin-top: 50px;
+}
+.sidebar ul li.collapsed,.sidebar ul,.sidebar ul li{
+  background: none;
+  list-style: none;
+  list-style-image: none;
+}
+.comment-form .form-text{
+  width: 100%;
+}
+#edit-actions .form-submit{
+  margin-right: 5px;
+}
+.block-search #edit-actions .form-submit{
+  margin-right: 0;
+}
+.tabs{
+  text-align: left;
+}
+.field-type-taxonomy-term-reference{
+
+}
+.field-type-taxonomy-term-reference .field-item{
+  display: inline;
+}
+.field-type-taxonomy-term-reference .field-item:after{
+  content: ', ';
+}
+.field-type-taxonomy-term-reference .field-item:last-child:after{
+  content: '';
+}
+.node ul.links, .node ul.links li{
+  margin-left: 0;
+  padding-left: 0;
+}
+#block-user-login .form-text{
+  width: 99%;
+}
+.flexslider {
+  border: medium none;
+  margin: 0;
+  position: relative;
+}
+.flexslider {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+.flex-control-paging{
+  display: none;
+}
+.alert{
+  margin-bottom: 10px;
+}
+#main-tabs ul.tabs{
+  margin-bottom: 50px;
+  display: block;
+  overflow: hidden;
+}
+
+.pagination {
+  height: 36px;
+  margin: 18px 0;
+}
+.pagination ul {
+  display: inline-block;
+  *display: inline;
+  /* IE7 inline-block hack */
+
+  *zoom: 1;
+  margin-left: 0;
+  margin-bottom: 0;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.pagination li {
+  display: inline;
+}
+.pagination a {
+  float: left;
+  padding: 0 14px;
+  line-height: 34px;
+  text-decoration: none;
+  border: 1px solid #ddd;
+  border-left-width: 0;
+}
+.pagination a:hover,
+.pagination .active a {
+  background-color: #f5f5f5;
+}
+.pagination .active a {
+  color: #999999;
+  cursor: default;
+}
+.pagination .disabled span,
+.pagination .disabled a,
+.pagination .disabled a:hover {
+  color: #999999;
+  background-color: transparent;
+  cursor: default;
+}
+.pagination li:first-child a {
+  border-left-width: 1px;
+  -webkit-border-radius: 3px 0 0 3px;
+  -moz-border-radius: 3px 0 0 3px;
+  border-radius: 3px 0 0 3px;
+}
+.pagination li:last-child a {
+  -webkit-border-radius: 0 3px 3px 0;
+  -moz-border-radius: 0 3px 3px 0;
+  border-radius: 0 3px 3px 0;
+}
+.pagination-centered {
+  text-align: center;
+}
+.pagination-right {
+  text-align: right;
+}
+.pager {
+  margin-left: 0;
+  margin-bottom: 18px;
+  list-style: none;
+  text-align: center;
+  *zoom: 1;
+}
+.pager:before,
+.pager:after {
+  display: table;
+  content: "";
+}
+.pager:after {
+  clear: both;
+}
+.pager li {
+  display: inline;
+}
+.pager a {
+  display: inline-block;
+  padding: 5px 14px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+}
+.pager a:hover {
+  text-decoration: none;
+  background-color: #f5f5f5;
+}
+.pager .next a {
+  float: right;
+}
+.pager .previous a {
+  float: left;
+}
+.pager .disabled a,
+.pager .disabled a:hover {
+  color: #999999;
+  background-color: #fff;
+  cursor: default;
+}
+.full-width #main-content.content{
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 100%;
+  float: none;
+  max-width: 100%;
+}
+.full-width #main-content.content:before,.full-width #main-content.content:after{
+  display: block;
+
+}
+.full-width #content{
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  float: none;
+  max-width: 100%;
+}
+body.admin-menu {
+  margin-top: 0 !important;
+}
+div.section{
+  overflow: hidden;
+}
+.ajax-section .flex-control-paging{
+  display: block;
+}
+.ajax-section .flex-control-paging {
+  padding-bottom: 20px;
+  padding-top: 20px;
+  text-align: center;
+}
+.ajax-section .flex-control-paging li{
+  display: inline-block;
+}
+.ajax-section .flex-control-paging li a{
+  display: inline-block;
+  text-indent: -999em; 
+  width: 12px; 
+  height: 12px;
+  margin: 0 5px;
+  background: url(../images/projects/pager.png) no-repeat top center;
+  background-size: 12px 24px; 
+}
+.ajax-section .flex-control-paging li a.flex-active{
+  background: url(../images/projects/pager-active.png) no-repeat top center; background-size: 12px 12px; 
+}
+.ajax-section .flex-control-paging li a:hover{
+  background-position: bottom; 
+}
+.view.portfolio ,.portfolio{
+  overflow: hidden;
+}
+.ajax-section .post, .ajax-section .node{
+
+  margin: 0;
+  padding: 0;
+}
+.node-portfolio h6 {
+  border-bottom: 1px solid #E9E9E9;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+.node-portfolio{
+  border-bottom: 1px solid #E9E9E9;
+}
+.ajax-section #ajax-onepage{
+  padding-bottom: 50px;
+  padding-top: 50px;
+}
+.team-image p{
+  margin-bottom: 0;
+}
+.block-simple-contact h3{
+  margin-top: 30px;
+
+}
+.block-simple-contact{
+  text-align: center;
+}
+#footer .form-item .form-required{
+  color: #FFF;
+}
+#footer .form-text, #footer .form-textarea{
+  color: #949494 !important;
+}
+#footer .form-textarea{
+  height: 180px;
+  overflow: auto;
+  padding: 18px;
+  background: none repeat scroll 0 0 #1E1E1E;
+}
+#footer .form-text{
+  background: none repeat scroll 0 0 #1E1E1E;
+}
+#footer .form-item .grippie{
+  display: none;
+}
+body.admin-menu nav{
+  top: 20px;
+}
+body.toolbar nav{
+  top: 30px;
+}
+#toolbar{
+  z-index: 1000;
+}
+body.toolbar.toolbar-drawer nav{
+  top: 64px;
+}
+#toolbar .icon{
+  display: none;
+}
+.comment .user-picture img{
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+.comment .user-picture{
+  left: -70px;
+  position: absolute;
+  top: 30px;
+  width: 43px;
+  height: 43px;
+}
+.comment h3{
+  display: block;
+  margin-bottom: 10px;
+}
+.comment .submitted{
+  color: #A4A4A3 !important;
+}
+#comments{
+  padding-top: 0;
+}
+.links.inline li{
+  display: inline;
+  margin-right: 5px;
+}
+.comment .content{
+  margin-top: 0;
+  padding-top: 0;
+}
+.comment-body{
+  padding-bottom: 30px;
+}
+.indented{
+  margin-left: 50px;
+}

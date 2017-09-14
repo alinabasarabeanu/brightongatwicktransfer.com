@@ -1,0 +1,64 @@
+name = Visia
+description = Visia theme, developed by <a href="http://tabvn.com/">Tabvn</a>.
+core = 7.x
+
+;stylesheets[all][] = stylesheets/loader.css
+stylesheets[all][] = stylesheets/reset.css
+stylesheets[all][] = stylesheets/grid.css
+stylesheets[all][] = stylesheets/style.css
+
+stylesheets[all][] = stylesheets/animations.css
+stylesheets[all][] = stylesheets/shortcodes.css
+stylesheets[all][] = stylesheets/visia.css
+
+; System stylesheets we'd like to avoid:
+stylesheets[all][] = system.messages.css
+stylesheets[all][] = system.menus.css
+
+
+
+;scripts[] = javascript/royal-preloader.js
+scripts[] = javascript/smoothscroll.js
+scripts[] = javascript/waypoints.js
+scripts[] = javascript/parallax.js
+scripts[] = javascript/navigation.js
+scripts[] = javascript/jquery.easing.js
+scripts[] = javascript/jquery.fittext.js
+scripts[] = javascript/jquery.localscroll.js
+scripts[] = javascript/jquery.scrollto.js
+scripts[] = javascript/jquery.appear.js
+scripts[] = javascript/jquery.waitforimages.js
+scripts[] = javascript/jquery.bxslider.js
+scripts[] = javascript/jquery.fitvids.js
+scripts[] = javascript/main.js
+scripts[] = javascript/shortcodes.js
+
+regions[sidebar]  = Sidebar
+regions[content] = Content
+;regions[header] = Header
+regions[main_navigation] = Main Navigation
+regions[footer_top] = Footer Top
+regions[footer_contact_form] = Footer Contact Form
+regions[footer] = Footer
+
+regions[highlighted] = Highlighted
+regions[help] = Help
+regions[page_top] = Page Top
+regions[page_bottom] = Page Bottom
+
+features[] = logo
+features[] = name
+features[] = slogan
+features[] = node_user_picture
+features[] = comment_user_picture
+features[] = comment_user_verification
+features[] = favicon
+
+settings[toggle_logo] = 1
+settings[toggle_name] = 0
+settings[toggle_slogan] = 0
+settings[toggle_node_user_picture] = 0
+settings[content_column_size] = 4
+settings[enable_breadcrumb] = 0
+settings[theme_color] = ruby-red.css
+settings[use_parallax] = 1

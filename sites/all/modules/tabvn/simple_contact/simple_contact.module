@@ -1,0 +1,228 @@
+<?php
+
+function simple_contact_form($form, &$form_state) {
+  global $user;
+
+  $form['#attributes']['class'][] = 'container';
+  $form['name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Name'),
+      '#maxlength' => 255,
+      '#default_value' => $user->uid ? format_username($user) : '',
+      '#required' => TRUE,
+      '#prefix' => '<div class="form-field grid-half">',
+      '#suffix' => '</div>',
+  );
+  $form['mail'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Email'),
+      '#maxlength' => 255,
+      '#default_value' => $user->uid ? $user->mail : '',
+      '#required' => TRUE,
+      '#prefix' => '<div class="form-field grid-half">',
+      '#suffix' => '</div>',
+  );
+  $form['message'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Message'),
+      '#required' => TRUE,
+      '#prefix' => '<div class="form-field grid-full">',
+      '#suffix' => '</div>',
+  );
+
+  $form['actions'] = array(
+      '#type' => 'actions',
+      '#prefix' => '<div class="form-click grid-full">',
+      '#suffix' => '</div>',
+  );
+  $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Send'),
+      '#weight' => 50,
+  );
+  $form['actions']['alert'] = array(
+      '#markup' => '<div id="alert"></div>',
+      '#weight' => 51,
+  );
+
+  return $form;
+}
+
+function simple_contact_form_validate($form, &$form_state) {
+  if (!valid_email_address($form_state['values']['mail'])) {
+    form_set_error('mail', t('You must enter a valid e-mail address.'));
+  }
+  if (empty($form_state['values']['message'])) {
+    form_set_error('message', t('You must enter message.'));
+  }
+}
+
+function _simple_contact_form_submit($values) {
+  global $user, $language;
+  if (!$user->uid) {
+    user_cookie_save(array_intersect_key($values, array_flip(array('name', 'mail'))));
+  }
+
+  // Get the to and from e-mail addresses.
+  $default_to = variable_get('site_mail');
+  $to = variable_get('simple_contact_recipients', $default_to);
+  $from = $values['sender']->mail;
+
+  // Send the e-mail to the recipients using the site default language.
+  drupal_mail('simple_contact', 'page_mail', $to, language_default(), $values, $from);
+  if (variable_get('simple_contact_auto_reply')) {
+    drupal_mail('simple_contact', 'page_autoreply', $from, $language, $values, $to);
+  }
+
+  flood_register_event('simple_contact', 3600);
+}
+
+function simple_contact_form_submit($form, &$form_state) {
+  global $user, $language;
+
+  $values = $form_state['values'];
+  $values['sender'] = $user;
+  $values['sender']->name = $values['name'];
+  $values['sender']->mail = $values['mail'];
+  $values['reply'] = variable_get('simple_contact_auto_reply');
+  $from = $values['sender']->mail;
+
+  // Save the anonymous user information to a cookie for reuse.
+  _simple_contact_form_submit($values);
+  watchdog('mail', '%sender-name (@sender-from) sent an e-mail from block contact form.', array('%sender-name' => $values['name'], '@sender-from' => $from));
+
+  // Jump to home page rather than back to contact page to avoid
+  // contradictory messages if flood control has been activated.
+  drupal_set_message(t('Your message has been sent.'));
+}
+
+function simple_contact_mail($key, &$message, $params) {
+  $language = $message['language'];
+  $params['subject'] = t("!sender-name sent a message", array('!sender-name' => format_username($params['sender'])), array('langcode' => $language->language));
+  $variables = array(
+      '!site-name' => variable_get('site_name', 'Tabvn'),
+      '!subject' => $params['subject'],
+      '!form-url' => url("<front>", array('absolute' => TRUE, 'language' => $language)),
+      '!sender-name' => format_username($params['sender']),
+      '!sender-url' => $params['sender']->uid ? url('user/' . $params['sender']->uid, array('absolute' => TRUE, 'language' => $language)) : $params['sender']->mail,
+  );
+
+  switch ($key) {
+    case 'page_mail':
+      $message['subject'] .= t('!subject', $variables, array('langcode' => $language->language));
+      $message['body'][] = t("!sender-name (!sender-url) sent a message using the contact form at !form-url.", $variables, array('langcode' => $language->language));
+      $message['body'][] = $params['message'];
+      break;
+    case 'page_autoreply':
+      $message['subject'] .= t('!subject', $variables, array('langcode' => $language->language));
+      $message['body'][] = $params['reply'];
+      break;
+  }
+}
+
+/**
+ * 
+ * Implementation of hook_block_info()
+ */
+function simple_contact_block_info() {
+
+
+  $blocks['simple_contact_form'] = array(
+      'info' => t('[Tabvn] Simple Contact Form'),
+  );
+
+  return $blocks;
+}
+
+function simple_contact_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'simple_contact_form':
+
+      $block['subject'] = t('Get in touch');
+
+      $block['content'] = drupal_get_form('simple_contact_form');
+
+
+      break;
+  }
+  return $block;
+}
+
+function simple_contact_block_configure($delta = '') {
+  // This example comes from node.module.
+  $form = array();
+  if ($delta == 'simple_contact_form') {
+    $form['simple_contact_recipients'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Recipients'),
+        '#default_value' => variable_get('simple_contact_recipients', variable_get('site_mail')),
+        '#description' => t("Example: 'webmaster@example.com' or 'sales@example.com,support@example.com' . To specify multiple recipients, separate each e-mail address with a comma."),
+        '#required' => TRUE,
+    );
+    $form['simple_contact_auto_reply'] = array(
+        '#title' => t('Auto reply'),
+        '#type' => 'textarea',
+        '#default_value' => variable_get('simple_contact_auto_reply', ""),
+        '#description' => t('Optional auto-reply. Leave empty if you do not want to send the user an auto-reply message.'),
+    );
+  }
+  return $form;
+}
+
+function simple_contact_block_save($delta = '', $edit = array()) {
+  // This example comes from node.module.
+  if ($delta == 'simple_contact_form') {
+    variable_set('simple_contact_recipients', $edit['simple_contact_recipients']);
+    variable_set('simple_contact_auto_reply', $edit['simple_contact_auto_reply']);
+  }
+}
+
+function simple_contact_menu() {
+  $items['simplecontact/ajax'] = array(
+      'title' => 'Contact Us',
+      'page callback' => 'simple_contact_ajax_page',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function simple_contact_ajax_page() {
+  global $user;
+  if (!$_POST)
+    exit;
+
+  $name = $_POST['name'];
+  $email = $_POST['email'];
+  $message = $_POST['message'];
+  if (empty($email) || !valid_email_address($email) || empty($name) || empty($message)) {
+    echo "<fieldset>";
+    echo "<div id='error_page'>";
+    echo "<div class='notification error clearfix'><p>" . t('Your could not be sent') . ".</p></div>";
+    echo "</div>";
+    echo "</fieldset>";
+    exit();
+  } else {
+
+    $values['sender'] = $user;
+    $values['sender']->name = $name;
+    $values['sender']->mail = $email;
+    $values['reply'] = variable_get('simple_contact_auto_reply');
+    $values['message'] = $message;
+    $values['name'] = $name;
+    $values['mail'] = $email;
+
+    // Save the anonymous user information to a cookie for reuse.
+    _simple_contact_form_submit($values);
+
+    echo "<fieldset>";
+    echo "<div id='success_page'>";
+    echo "<div class='notification success clearfix'><p>" . t('Your message has been sent') . ".</p></div>";
+    echo "</div>";
+    echo "</fieldset>";
+    exit();
+  }
+}

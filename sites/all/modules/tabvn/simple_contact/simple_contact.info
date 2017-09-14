@@ -1,0 +1,4 @@
+name = Simple Contact Form
+description = add simple contact form as a block
+core = 7.x
+package = Tabvn
