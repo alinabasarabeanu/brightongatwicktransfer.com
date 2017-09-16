@@ -1,0 +1,397 @@
+<?php
+
+/**
+ * @file
+ * Main components.
+ */
+
+/**
+ * Implements hook_libraries_info().
+ */
+function webform_addressfield_extra_libraries_info() {
+  $libraries['geocomplete'] = array(
+    'name' => 'Geocomplete',
+    'vendor url' => 'http://ubilabs.github.io/geocomplete/',
+    'download url' => 'https://github.com/ubilabs/geocomplete/archive/master.zip',
+    'version arguments' => array(
+      'file' => 'jquery.geocomplete.js',
+      'pattern' => '/V\s+([0-9\.\ \-]+)/',
+      'lines' => 5,
+    ),
+    'files' => array(
+      'js' => array(
+        'jquery.geocomplete.js' => array(
+          'type' => 'file',
+          'weight' => 2,
+        ),
+      ),
+    ),
+    'variants' => array(
+      'minified' => array(
+        'files' => array(
+          'js' => array(
+            'jquery.geocomplete.min.js',
+          ),
+        ),
+        'variant arguments' => array(
+          'variant' => 'minified',
+        ),
+      ),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implementation of hook_webform_component_defaults_alter().
+ */
+function webform_addressfield_extra_webform_component_defaults_alter(&$defaults, $type) {
+  if ($type == 'addressfield') {
+    $defaults['extra']['autocomplete'] = TRUE;
+    $defaults['extra']['api_key'] = '';
+    $defaults['extra']['placeholder'] = '';
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function webform_addressfield_extra_form_webform_component_edit_form_alter(&$form, $form_state) {
+  $component = $form_state['build_info']['args'][1];
+  if ($component['type'] == 'addressfield') {
+    $form['extra']['autocomplete'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use autocompletion'),
+      '#description' => t('Enable autocompletion functionnality on this address component.'),
+      '#default_value' => $component['extra']['autocomplete'],
+    );
+    $form['extra']['autocomplete_container'] = array(
+      '#type' => 'container',
+      '#states' => array(
+        "visible" => array(
+          "input[name='extra[autocomplete]']" => array("checked" => TRUE)),
+      ),
+    );
+    $form['extra']['autocomplete_container']['api_key'] = array(
+      '#type' => 'textfield',
+      '#title' => t('API KEY'),
+      '#default_value' => $component['extra']['api_key'],
+      '#description' => t('Optional:you can add here your Google Maps API Key.'),
+      '#weight' => 1,
+      '#parents' => array('extra', 'api_key'),
+    );
+    $form['display']['placeholder'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Placeholder'),
+      '#default_value' => $component['extra']['placeholder'],
+      '#description' => t('The placeholder will be shown in the field until the user starts entering a value.'),
+      '#weight' => 1,
+      '#parents' => array('extra', 'placeholder'),
+    );
+  }
+}
+
+/**
+ * Implementation of hook_webform_component_render_alter().
+ */
+function webform_addressfield_extra_webform_component_render_alter(&$element, &$component, $filter = TRUE) {
+  // Let's override the addressfield with our custom autocompletion.
+  if ($component['type'] == 'addressfield' &&
+    $component['extra']['autocomplete']) {
+
+    // ---
+    // 1. Creates a new element.
+    $new_element = array(
+      '#attributes'         => $component['extra']['attributes'],
+      '#theme_wrappers'     => array('webform_element'),
+      '#required'           => $component['required'],
+      '#title'              => $filter ? _webform_filter_xss($component['name']) : $component['name'],
+      '#title_display'      => $component['extra']['title_display'] ? $component['extra']['title_display'] : 'before',
+      '#attributes'         => $component['extra']['attributes'],
+      '#description'        => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
+      //Either one being true will could as required...because webform changed in 4.x-alpha8
+      '#weight'             => $component['weight'],
+      '#webform_component'  => $element['#webform_component'],
+      '#type'               => 'fieldset',
+      '#element_validate'   => array(),/*
+        '_webform_addressfield_extra_widget_validate'
+      ),*/
+    );
+    if (isset($element['#wrapper_attributes'])) {
+      $new_element['#wrapper_attributes'] = $element['#wrapper_attributes'];
+    }
+
+    // ---
+    // 2. Update addressfield according to our custom requirements.
+
+    // Add data-geo data to the address fields.
+    $data_atributes = array(
+      'organisation_block' => array(
+        'organisation_name' => array(
+          'geo'       => 'organisation_name',
+          'required'  => $component['required'],
+        ),
+      ),
+      'street_block' => array(
+        'thoroughfare' => array(
+          'geo'       => 'subpremise street_number route',
+          'required'  => $component['required'],
+        ),
+        'premise'      => array(
+          'geo'       => 'premise subpremise',
+          'required'  => FALSE,
+        ),
+      ),
+      'locality_block' => array(
+        'locality' => array(
+          'geo'       => 'administrative_area_level_3 postal_town locality',
+          'required'  => $component['required'],
+        ),
+        'dependent_locality' => array(
+          'geo'       => 'sub_locality',
+          'required'  => $component['required'],
+        ),
+        'administrative_area' => array(
+          'geo'       => 'administrative_area_level_1_short administrative_area_level_2',
+          'required'  => $component['required'],
+        ),
+        'postal_code' => array(
+          'geo'       => 'postal_code_prefix postal_code',
+          'required'  => $component['required'],
+        ),
+      ),
+      'country' => array(
+        'geo'       => 'country_short',
+        'required'  => $component['required'],
+      ),
+    );
+
+    foreach ($data_atributes as $key => $data) {
+      if (isset($data['geo']) && isset($element[$key])) {
+        $element[$key]['#attributes']['data-geo'] = $data['geo'];
+        $element[$key]['#attributes']['data-required'] = isset($element[$key]['#required']) ? $element[$key]['#required'] : FALSE;
+        $element[$key]['#attributes']['placeholder'] = $element[$key]['#title'];
+        $element[$key]['#title_display'] = 'invisible';
+        $element[$key]['#needs_validation'] = FALSE;
+        //$element[$key]['#required'] = $data['required'];
+        continue;
+      }
+      foreach ($data as $field => $attributes) {
+        if (isset($element[$key][$field])) {
+          $element[$key][$field]['#attributes']['data-geo'] = $attributes['geo'];
+          $element[$key][$field]['#attributes']['data-required'] = isset($element[$key][$field]['#required']) ? $element[$key][$field]['#required'] : FALSE;
+          $element[$key][$field]['#attributes']['placeholder'] = $element[$key][$field]['#title'];
+          $element[$key][$field]['#title_display'] = 'invisible';
+          $element[$key][$field]['#needs_validation'] = FALSE;
+          //$element[$key][$field]['#required'] = $attributes['required'];
+        }
+      }
+    }
+
+    unset($element['#title']);
+    unset($element['#description']);
+    unset($element['#translatable']);
+    unset($element['#theme_wrappers']);
+    unset($element['#webform_component']);
+
+    // Move country after the city.
+    $element['country']['#weight'] = $element['locality_block']['#weight'] + 50;
+
+    // ---
+    // 3. Move address field container on the new element.
+    $element['#prefix'] = '<div class="webform-addressfield-extra-wrapper" id="' .
+      $element['#wrapper_id'] . '">';
+    $new_element['addressfield'] = $element;
+
+
+    // If the component has addressfield_extra address value format,
+    // we need to regenerate and preprocess some parts of it.
+    if (isset($new_element['addressfield']['#address']['addressfield'])) {
+      unset($new_element['addressfield']['street_block']['#access']);
+      unset($new_element['addressfield']['locality_block']['#access']);
+
+      // Generate the address form.
+      $context = array(
+        'mode' => 'form',
+        'delta' => 0,
+        'instance' => array(),
+      );
+      if ($component['required']) {
+        $context['instance']['required'] = $component['required'];
+      }
+      $handlers = !empty($component['extra']['format_handlers']) ? $component['extra']['format_handlers'] : array('address');
+
+      $new_element['addressfield'] += addressfield_generate($new_element['addressfield']['#address']['addressfield'], $handlers, $context);
+      $new_element['addressfield']['#process'] = array('_webform_addressfield_extra_process_format_form');
+    }
+
+    // ----
+    // 4. Prepare for autocompletion.
+
+    // Add the autocompletion field.
+    $new_element['autocompletion_block'] = array(
+      '#type'             => 'textfield',
+      '#weight'           => $element['#weight'] - 100,
+      '#default_value'    => isset($element['#address']['autocompletion_block']) ? $element['#address']['autocompletion_block'] : NULL,
+      '#attributes'       => array(
+        'placeholder'       => $component['extra']['placeholder'],
+        'class'             => array('webform-addressfield-autocomplete-input'),
+        'autocomplete'      => 'off',
+      ),
+      '#translatable'     => array(
+        'title',
+        'description',
+      ),
+      '#attached' => array(
+        'libraries_load'  => array(array('geocomplete')),
+        'js'  => array(
+          _webform_addressfield_extra_geocomplete_url($component['extra']['api_key']) => array(
+            'type' => 'external',
+            'weight' => 1,
+          ),
+          drupal_get_path('module', 'webform_addressfield_extra') . '/webform_addressfield_extra.geocomplete.js' => array(
+            'type' => 'file',
+            'weight' => 3,
+          ),
+        ),
+        'css'  => array(
+          drupal_get_path('module', 'webform_addressfield_extra') . '/webform_addressfield_extra.css' => array(
+            'type' => 'file',
+            'weight' => 3,
+          ),
+        ),
+      )
+    );
+
+    $link_variables = array(
+      'external' => TRUE,
+      'attributes' => array(
+        'class' => array('addressfield-autocomplete-reveal'),
+      ),
+    );
+    $new_element['link_container'] = array(
+      '#type'       => 'container',
+      '#weight'           => $element['#weight'] - 50,
+      '#attributes' => array(
+        'class' => array('webform-addressfield-extra-wrapper--toogle'),
+      ),
+      'link' => array(
+        '#markup' => l(t("manual address entry"), 'javascript:void(0);', $link_variables),
+      ),
+    );
+
+    $element = $new_element;
+  }
+}
+
+/**
+ * Implementation of hook_webform_component_display_alter().
+ */
+function webform_addressfield_extra_webform_component_display_alter(&$element, &$component) {
+  if ($component['type'] == 'addressfield' && $component['extra']['autocomplete']) {
+    $element['#address'] = $element['#address']['addressfield'];
+  }
+}
+
+/**
+ * Alter a Webform submission's data when exported.
+ */
+function webform_addressfield_extra_webform_csv_data_alter(&$data, $component, $submission) {
+  if ($component['type'] == 'addressfield' && $component['extra']['autocomplete']) {
+    if (!empty($component['extra']['csv_separate']) && $component['extra']['csv_separate'] == 1) {
+      $return = array();
+      foreach (addressfield_tokens_property_names() as $key => $name) {
+        $return[] = (isset($submission->data[1][0]['addressfield'][$key])) ? $submission->data[1][0]['addressfield'][$key] : '';
+      }
+      $data = $return;
+    }
+    else {
+      if (!empty($submission->data[1][0]['addressfield'])) {
+        $data = theme('addressfield_formatter__linear', array('address' => $submission->data[1][0]['addressfield']));
+      } else {
+        $data = '';
+      }
+    }
+  }
+}
+
+/**
+ * Determine the site protocol (http or https).
+ */
+function _webform_addressfield_extra_url_protocol() {
+  global $base_url;
+  return parse_url($base_url, PHP_URL_SCHEME) == 'https' ? 'https' : 'http';
+}
+
+function _webform_addressfield_extra_geocomplete_url($api_key = FALSE) {
+  $options = array(
+    'query' => array(
+      'libraries' => 'places',
+    ),
+    'external'  => TRUE
+  );
+  if ($api_key) {
+    $options['query']['key'] = $api_key;
+  }
+  return url(_webform_addressfield_extra_url_protocol() . '://maps.googleapis.com/maps/' . 'api/js', $options);
+}
+
+/**
+ * Address autocomplete widget validation function.
+ *
+ * Validate to see if lat and lng have been added for addresses which
+ * do not reveal the widget.
+ */
+/*function _webform_addressfield_extra_widget_validate(&$element, &$form_state, $form) {
+
+  $elements = _find_all_children_elements($element['addressfield']);
+
+  // Loop over all elements and find they are all empty or all valid.
+  $all_empty = TRUE;
+  $all_filled = TRUE;
+  foreach ($elements as $elem) {
+    // If element access if undefined or accessible and is required.
+    if ((!isset($elem['#access']) || $elem['#access']) && $elem['#required']) {
+      $all_empty &= empty($elem['#value']);
+      $all_filled &= !empty($elem['#value']);
+    }
+  }
+
+  if (($element['#required'] == TRUE && $all_empty)) {
+    form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
+  } else if ( $element['#required'] == TRUE && !$all_filled) {
+    form_error($element, t('!name field is invalid.', array('!name' => $element['#title'])));
+  }
+}*/
+
+/**
+ * Generate a full-fledged form from a format snippet, as returned by addressfield_formats().
+ */
+function _webform_addressfield_extra_process_format_form($format, &$form_state, $complete_form) {
+  // Make sure to load all the plugins that participated in this format.
+  ctools_include('plugins');
+  foreach ($format['#handlers'] as $handler) {
+    ctools_plugin_load_function('addressfield', 'format', $handler, 'format callback');
+  }
+
+  _addressfield_process_format_form($format, $format['#address']['addressfield']);
+  return $format;
+}
+
+function _find_all_children_elements(&$element)
+{
+  $results = array();
+  $children = element_children($element);
+  foreach($children as $key)
+  {
+    $child = &$element[$key];
+    if(is_array($child))
+    {
+      if(!empty($child['#type']) && $child['#type'] != 'addressfield_container') // OPTIONAL!
+        $results[] = $child;
+      $results = array_merge($results, _find_all_children_elements($child));
+    }
+    unset($child);
+  }
+  return $results;
+}
