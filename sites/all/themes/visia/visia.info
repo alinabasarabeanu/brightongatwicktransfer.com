@@ -18,13 +18,13 @@ stylesheets[all][] = system.menus.css
 
 
 ;scripts[] = javascript/royal-preloader.js
-;scripts[] = javascript/smoothscroll.js
+scripts[] = javascript/smooth-scroll.js
 scripts[] = javascript/waypoints.js
 scripts[] = javascript/parallax.js
 scripts[] = javascript/navigation.js
 scripts[] = javascript/jquery.easing.js
 scripts[] = javascript/jquery.fittext.js
-;scripts[] = javascript/jquery.localscroll.js
+scripts[] = javascript/jquery.localscroll.js
 scripts[] = javascript/jquery.scrollto.js
 scripts[] = javascript/jquery.appear.js
 scripts[] = javascript/jquery.waitforimages.js
